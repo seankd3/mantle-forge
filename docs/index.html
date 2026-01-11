@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MantleForge - AI Smart Contract Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Space Grotesk', sans-serif; }
+    .gradient-bg { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+    .mantle-accent { color: #00d4aa; }
+    .mantle-bg { background-color: #00d4aa; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+      <div></div>
+      <div class="text-center">
+        <h1 class="text-5xl font-bold mb-2">
+          <span class="mantle-accent">Mantle</span>Forge
+        </h1>
+        <p class="text-lg text-gray-300">Generate smart contracts with AI, deploy to Mantle in seconds</p>
+      </div>
+      <button id="wallet-btn" onclick="connectWallet()" class="mantle-bg text-black font-bold py-2 px-4 rounded-xl hover:opacity-90">
+        🔗 Connect Wallet
+      </button>
+    </div>
+
+    <!-- Main Interface -->
+    <div class="max-w-4xl mx-auto">
+      <!-- Input Section -->
+      <div class="bg-white/10 backdrop-blur rounded-2xl p-6 mb-6">
+        <label class="block text-lg mb-3 font-medium">Describe your smart contract:</label>
+        <textarea
+          id="prompt"
+          class="w-full h-32 bg-black/30 rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00d4aa]"
+          placeholder="Create an ERC-20 token called MantleGold with 1 million supply..."
+        ></textarea>
+        <button
+          onclick="generateContract()"
+          class="mantle-bg text-black font-bold py-3 px-8 rounded-xl mt-4 hover:opacity-90 transition"
+        >
+          🔮 Generate Contract
+        </button>
+      </div>
+
+      <!-- Examples -->
+      <div class="bg-white/5 rounded-xl p-4 mb-6">
+        <p class="text-sm text-gray-400 mb-2">Try these examples:</p>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="setPrompt('Create an ERC-20 token called MantleGold with 1 million supply')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">ERC-20 Token</button>
+          <button onclick="setPrompt('Build an NFT collection called MantleApes with 10000 max supply and 0.05 MNT mint price')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">NFT Collection</button>
+          <button onclick="setPrompt('Create a timelock contract that releases funds after 30 days')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">Timelock</button>
+          <button onclick="setPrompt('Build a voting contract for DAO proposals')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">Voting DAO</button>
+          <button onclick="setPrompt('Create a 2 of 3 multisig wallet')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">MultiSig</button>
+          <button onclick="setPrompt('Build a staking pool contract')" class="bg-white/10 px-3 py-1 rounded-full text-sm hover:bg-white/20">Staking</button>
+        </div>
+      </div>
+
+      <!-- Output Section -->
+      <div id="output" class="hidden">
+        <div class="bg-white/10 backdrop-blur rounded-2xl p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Generated Contract</h2>
+            <div class="flex gap-2">
+              <button onclick="copyCode()" class="bg-white/10 px-4 py-2 rounded-lg text-sm hover:bg-white/20">📋 Copy</button>
+              <button onclick="openRemix()" class="mantle-bg text-black px-4 py-2 rounded-lg text-sm font-bold hover:opacity-90">🚀 Open in Remix</button>
+            </div>
+          </div>
+          <pre id="contract-code" class="bg-black/50 rounded-xl p-4 overflow-x-auto text-sm text-green-400"></pre>
+        </div>
+
+        <!-- Contract Info -->
+        <div id="contract-info" class="bg-white/5 rounded-xl p-4">
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-gray-400">Type:</span>
+              <span id="contract-type" class="ml-2 mantle-accent font-medium"></span>
+            </div>
+            <div>
+              <span class="text-gray-400">Network:</span>
+              <span class="ml-2">Mantle Sepolia (Testnet)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="hidden text-center py-12">
+        <div class="animate-spin w-12 h-12 border-4 border-[#00d4aa] border-t-transparent rounded-full mx-auto"></div>
+        <p class="mt-4 text-gray-300">Generating your contract...</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-12 text-gray-500 text-sm">
+      <p>Built for Mantle Global Hackathon 2025 | Powered by AI</p>
+      <p class="mt-2">
+        <a href="https://mantle.xyz" target="_blank" class="hover:text-[#00d4aa]">Mantle Network</a> •
+        <a href="https://faucet.sepolia.mantle.xyz" target="_blank" class="hover:text-[#00d4aa]">Get Testnet MNT</a> •
+        <a href="https://github.com/Sean-Kenneth-Doherty/mantleforge" target="_blank" class="hover:text-[#00d4aa]">GitHub</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Contract templates
+    const TEMPLATES = {
+      erc20: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract {{NAME}} is ERC20 {
+    constructor() ERC20("{{NAME}}", "{{SYMBOL}}") {
+        _mint(msg.sender, {{SUPPLY}} * 10 ** decimals());
+    }
+}`,
+      erc721: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract {{NAME}} is ERC721, Ownable {
+    uint256 private _tokenIds;
+    uint256 public maxSupply = {{MAX_SUPPLY}};
+    uint256 public mintPrice = {{MINT_PRICE}} ether;
+
+    constructor() ERC721("{{NAME}}", "{{SYMBOL}}") Ownable(msg.sender) {}
+
+    function mint() public payable {
+        require(_tokenIds < maxSupply, "Max supply reached");
+        require(msg.value >= mintPrice, "Insufficient payment");
+        _tokenIds++;
+        _safeMint(msg.sender, _tokenIds);
+    }
+}`,
+      timelock: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract TimeLock {
+    address public beneficiary;
+    uint256 public releaseTime;
+
+    constructor(address _beneficiary, uint256 _lockDays) payable {
+        beneficiary = _beneficiary;
+        releaseTime = block.timestamp + (_lockDays * 1 days);
+    }
+
+    function release() public {
+        require(block.timestamp >= releaseTime, "Too early");
+        payable(beneficiary).transfer(address(this).balance);
+    }
+}`,
+      voting: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VotingDAO {
+    struct Proposal {
+        string description;
+        uint256 forVotes;
+        uint256 againstVotes;
+        uint256 deadline;
+    }
+
+    mapping(uint256 => Proposal) public proposals;
+    mapping(uint256 => mapping(address => bool)) public hasVoted;
+    uint256 public proposalCount;
+
+    function createProposal(string memory description, uint256 durationDays) public {
+        proposalCount++;
+        proposals[proposalCount] = Proposal(description, 0, 0, block.timestamp + durationDays * 1 days);
+    }
+
+    function vote(uint256 proposalId, bool support) public {
+        require(!hasVoted[proposalId][msg.sender], "Already voted");
+        hasVoted[proposalId][msg.sender] = true;
+        if (support) proposals[proposalId].forVotes++;
+        else proposals[proposalId].againstVotes++;
+    }
+}`,
+      multisig: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract MultiSigWallet {
+    address[] public owners;
+    uint256 public required;
+    mapping(uint256 => mapping(address => bool)) public confirmations;
+    uint256 public transactionCount;
+
+    constructor(address[] memory _owners, uint256 _required) {
+        owners = _owners;
+        required = _required;
+    }
+
+    receive() external payable {}
+}`,
+      staking: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+contract StakingPool {
+    IERC20 public stakingToken;
+    mapping(address => uint256) public stakedBalance;
+    mapping(address => uint256) public lastUpdateTime;
+
+    constructor(address _token) {
+        stakingToken = IERC20(_token);
+    }
+
+    function stake(uint256 amount) external {
+        stakingToken.transferFrom(msg.sender, address(this), amount);
+        stakedBalance[msg.sender] += amount;
+        lastUpdateTime[msg.sender] = block.timestamp;
+    }
+
+    function withdraw(uint256 amount) external {
+        stakedBalance[msg.sender] -= amount;
+        stakingToken.transfer(msg.sender, amount);
+    }
+}`
+    };
+
+    let currentCode = '';
+    let walletAddress = null;
+
+    function setPrompt(text) {
+      document.getElementById('prompt').value = text;
+    }
+
+    function parsePrompt(prompt) {
+      const lower = prompt.toLowerCase();
+      let type = 'erc20';
+      let params = { name: 'MyToken', symbol: 'MTK', supply: 1000000 };
+
+      if (lower.includes('nft') || lower.includes('erc721') || lower.includes('collection')) {
+        type = 'erc721';
+        const nameMatch = prompt.match(/called?\s+["']?(\w+)["']?/i);
+        params.name = nameMatch ? nameMatch[1] : 'MyNFT';
+        params.symbol = params.name.substring(0, 4).toUpperCase();
+        const supplyMatch = prompt.match(/(\d+)\s*(?:max\s+)?supply/i);
+        params.maxSupply = supplyMatch ? parseInt(supplyMatch[1]) : 10000;
+        const priceMatch = prompt.match(/(\d+(?:\.\d+)?)\s*(?:eth|mnt)/i);
+        params.mintPrice = priceMatch ? parseFloat(priceMatch[1]) : 0.01;
+      } else if (lower.includes('timelock') || lower.includes('lock')) {
+        type = 'timelock';
+        const daysMatch = prompt.match(/(\d+)\s*days?/i);
+        params.lockDays = daysMatch ? parseInt(daysMatch[1]) : 30;
+      } else if (lower.includes('voting') || lower.includes('dao') || lower.includes('proposal')) {
+        type = 'voting';
+      } else if (lower.includes('multisig') || lower.includes('multi-sig')) {
+        type = 'multisig';
+      } else if (lower.includes('staking') || lower.includes('stake')) {
+        type = 'staking';
+      } else {
+        // ERC20
+        const nameMatch = prompt.match(/called?\s+["']?(\w+)["']?/i);
+        params.name = nameMatch ? nameMatch[1] : 'MyToken';
+        params.symbol = params.name.substring(0, 4).toUpperCase();
+        const supplyMatch = prompt.match(/(\d+)\s*(?:million)?\s*supply/i);
+        if (supplyMatch) {
+          params.supply = parseInt(supplyMatch[1]);
+          if (lower.includes('million')) params.supply *= 1000000;
+        }
+      }
+
+      return { type, params };
+    }
+
+    function generateContract() {
+      const prompt = document.getElementById('prompt').value;
+      if (!prompt) return alert('Please enter a description');
+
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('output').classList.add('hidden');
+
+      setTimeout(() => {
+        const { type, params } = parsePrompt(prompt);
+        let code = TEMPLATES[type];
+
+        // Replace placeholders
+        code = code.replace(/\{\{NAME\}\}/g, params.name || 'Contract');
+        code = code.replace(/\{\{SYMBOL\}\}/g, params.symbol || 'TKN');
+        code = code.replace(/\{\{SUPPLY\}\}/g, params.supply || 1000000);
+        code = code.replace(/\{\{MAX_SUPPLY\}\}/g, params.maxSupply || 10000);
+        code = code.replace(/\{\{MINT_PRICE\}\}/g, params.mintPrice || 0.01);
+
+        currentCode = code;
+        document.getElementById('contract-code').textContent = code;
+        document.getElementById('contract-type').textContent = type.toUpperCase();
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('output').classList.remove('hidden');
+      }, 1000);
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(currentCode);
+      alert('Contract copied to clipboard!');
+    }
+
+    function openRemix() {
+      const encoded = btoa(currentCode);
+      window.open('https://remix.ethereum.org/', '_blank');
+      alert('Paste the copied contract into Remix IDE to deploy!');
+      copyCode();
+    }
+
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        alert('Please install MetaMask!');
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        walletAddress = accounts[0];
+        document.getElementById('wallet-btn').textContent = '🟢 ' + walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
+
+        // Add Mantle network
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: '0x138B',
+              chainName: 'Mantle Sepolia',
+              rpcUrls: ['https://rpc.sepolia.mantle.xyz'],
+              nativeCurrency: { name: 'MNT', symbol: 'MNT', decimals: 18 }
+            }]
+          });
+        } catch (e) {}
+      } catch (err) {
+        alert('Failed to connect: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
