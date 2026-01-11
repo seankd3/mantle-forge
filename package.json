@@ -1,0 +1,17 @@
+{
+  "name": "mantleforge",
+  "version": "1.0.0",
+  "description": "AI Smart Contract Builder for Mantle Network",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "echo 'Build complete'",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "ethers": "^6.9.0",
+    "solc": "^0.8.23",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
